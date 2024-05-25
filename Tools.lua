@@ -13,6 +13,12 @@ local Tools = {
 	Connections = { }
 }
 
+Tools.FormatNumber = function(num)
+	if type(tonumber(num)) ~= "number" then return end
+	num = tostring(num)
+	return (((num:reverse()):gsub("%d%d%d", "%1,")):reverse()):gsub("^,", "")
+end
+
 Tools.FindCenterVector2 = function(Size)
 	local size = {X = Size.X.Offset, Y = Size.Y.Offset}
 
