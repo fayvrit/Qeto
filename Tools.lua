@@ -14,7 +14,7 @@ local Tools = {
 }
 
 Tools.FormatNumber = function(num)
-	if type(tonumber(num)) ~= "number" then return end
+	if type(tonumber(num)) ~= "number" then return num end
 	num = tostring(num)
 	return (((num:reverse()):gsub("%d%d%d", "%1,")):reverse()):gsub("^,", "")
 end
