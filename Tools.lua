@@ -1,8 +1,8 @@
-local Text = game:GetService("TextService")
 local UserInput = game:GetService("UserInputService")
 local Tween = game:GetService("TweenService")
-local Gui = game:GetService("GuiService")
+local Text = game:GetService("TextService")
 local Players = game:GetService("Players")
+local Gui = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -15,12 +15,12 @@ local Tools = {
 
 Tools.FormatNumber = function(num)
 	if type(tonumber(num)) ~= "number" then return num end
-	num = tostring(num)
-	return (((num:reverse()):gsub("%d%d%d", "%1,")):reverse()):gsub("^,", "")
+	num = tostring(num):reverse()
+	return num:gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
-Tools.FindCenterVector2 = function(Size)
-	local size = {X = Size.X.Offset, Y = Size.Y.Offset}
+Tools.FindCenterUDim2 = function( size )
+	size = {X = size.X.Offset, Y = size.Y.Offset}
 
 	return UDim2.fromOffset((Tools.Screen.ViewportSize.X / 2) - size.X / 2, Tools.Screen.ViewportSize.Y / 2 - size.Y / 2);
 end
@@ -47,7 +47,9 @@ Tools.notification = function( ... )
 		LastDuration = nil,
 		Parent = tbl.Parent,
 	}
-
+	
+	if not logs.Parent then return warn("notification: Missing Arguments") end
+	
 	--[[ Instances ]] do
 		logs.obj = {
 			Logs = Instance.new("Frame"),
@@ -81,8 +83,10 @@ Tools.notification = function( ... )
 				LastDuration = tbl.LastDuration and true or false,
 				Duration = tbl.Duration or 2,
 				Message = tbl.Message,
-				Type = tbl.Type
+				Type = tbl.Type or "Normal"
 			}
+			
+			if not noti.Message then return warn("message: Missing Arguments") end
 			
 			if logs[noti.Message] then
 				logs[noti.Message].Remove()
@@ -157,30 +161,47 @@ Tools.notification = function( ... )
 		
 			--[[ Functions ]] do
 				local bounds = logs[noti.Message].obj.Text.TextBounds
+				local Tweens = {
+					Start = {
+						Tween:Create(logs[noti.Message].obj.Text, Tools.TweenInfo, {TextTransparency = 0, MaxVisibleGraphemes = #noti.Message}),
+						Tween:Create(logs[noti.Message].obj.Background, Tools.TweenInfo, {BackgroundTransparency = .3}),
+						Tween:Create(logs[noti.Message].obj.UIStroke, Tools.TweenInfo, {Transparency = .3}),
+						Tween:Create(logs[noti.Message].obj.Border, Tools.TweenInfo, {
+							Size = UDim2.new(0, bounds.X + 20, 0, bounds.Y + 11), 
+							BackgroundTransparency = .3
+						})
+					},
+					End = {
+						Tween:Create(logs[noti.Message].obj.Text, Tools.TweenInfo, {TextTransparency = 1, MaxVisibleGraphemes = 0}),
+						Tween:Create(logs[noti.Message].obj.Background, Tools.TweenInfo, {BackgroundTransparency = 1}),
+						Tween:Create(logs[noti.Message].obj.UIStroke, Tools.TweenInfo, {Transparency = 1}),
+						Tween:Create(logs[noti.Message].obj.Border, Tools.TweenInfo, {
+							Size = UDim2.new(0, 0, 0, bounds.Y + 11), 
+							BackgroundTransparency = 1
+						})
+					}
+				}
+				
+				logs[noti.Message].BoundChanged = function(property)
+					if property ~= "TextBounds" or logs[noti.Message].obj.Text.TextBounds.X < bounds.X then return end
+					
+					bounds = logs[noti.Message].obj.Text.TextBounds
+					logs[noti.Message].obj.Border.Size = UDim2.new(0, bounds.X + 20, 0, bounds.Y + 11)
+				end
 				
 				logs[noti.Message].AnimStart = function()
-					Tween:Create(logs[noti.Message].obj.Text, Tools.TweenInfo, {TextTransparency = 0, MaxVisibleGraphemes = #noti.Message}):Play()
-					Tween:Create(logs[noti.Message].obj.Background, Tools.TweenInfo, {BackgroundTransparency = .3}):Play()
-					Tween:Create(logs[noti.Message].obj.UIStroke, Tools.TweenInfo, {Transparency = .3}):Play()
-					
-					Tween:Create(logs[noti.Message].obj.Border, Tools.TweenInfo, {
-						Size = UDim2.new(0, bounds.X + 20, 0, bounds.Y + 11), 
-						BackgroundTransparency = .3
-					}):Play()
+					for _, tween in Tweens.Start do
+						tween:Play()
+					end
 				end
 				
 				logs[noti.Message].AnimEnd = function()
-					Tween:Create(logs[noti.Message].obj.Text, Tools.TweenInfo, {TextTransparency = 1, MaxVisibleGraphemes = 0}):Play()
-					Tween:Create(logs[noti.Message].obj.Background, Tools.TweenInfo, {BackgroundTransparency = 1}):Play()
-					Tween:Create(logs[noti.Message].obj.UIStroke, Tools.TweenInfo, {Transparency = 1}):Play()
-					
-					Tween:Create(logs[noti.Message].obj.Border, Tools.TweenInfo, {
-						Size = UDim2.new(0, 0, 0, bounds.Y + 11), 
-						BackgroundTransparency = 1
-					}):Play()
+					for _, tween in Tweens.End do
+						tween:Play()
+					end
 				end
 				
-				logs[noti.Message].Remove = function()	
+				logs[noti.Message].remove = function()	
 					if not logs[noti.Message] then return end
 					
 					logs[noti.Message].AnimEnd()
@@ -192,7 +213,7 @@ Tools.notification = function( ... )
 					logs[noti.Message] = nil 
 				end
 				
-				logs[noti.Message].Start = function()		
+				logs[noti.Message].start = function()		
 					if noti.LastDuration then
 						noti.Duration = logs.LastDuration and logs.LastDuration or noti.Duration
 					end
@@ -203,20 +224,20 @@ Tools.notification = function( ... )
 					task.wait(noti.Duration)
 					
 					if not logs[noti.Message] then return end
-					logs[noti.Message].Remove()
+					logs[noti.Message].remove()
 				end
 				
-				coroutine.wrap(logs[noti.Message].Start)()
-				
+				coroutine.wrap(logs[noti.Message].start)()
+				logs[noti.Message].obj.Text.Changed:Connect(logs[noti.Message].BoundChanged)
 			end
 			
 			return logs[noti.Message]
 		end
 
-		logs.Remove = function( msg )
+		logs.remove = function( msg )
 			if not logs[msg] then return end
 			
-			logs[msg].Remove()
+			logs[msg].remove()
 		end
 	end
 
@@ -232,15 +253,18 @@ Tools.cursor = function( ... )
 			["Button"] = {"rbxassetid://17470748351", Vector2.new(0.35, 0.2)},
 			["Resize"] = {"rbxassetid://17472518830", Vector2.new(0.5, 0.5)}
 		},
-
+		Color = tbl.Color or Color3.fromRGB(255, 255, 255),
 		Table = tbl.Table,
 		Object = tbl.Object,
 		Parent = tbl.Parent
 	}
 
-	if not cursor.Parent or not cursor.Table.minimize then return cursor end
+	if not cursor.Parent or not cursor.Table.minimize then 
+		return warn("cursor: Missing Arguments") 
+	end
 
 	--[[ Functions ]] do
+		
 		cursor.spawn = function()
 			cursor.obj = {Cursor = Instance.new("ImageLabel")}
 
@@ -280,12 +304,13 @@ Tools.cursor = function( ... )
 				cursor.switch("Button")
 				return
 			end
-
-			if #hoveredElements[2] > 0 or cursor.Table.resize.Active then
-				cursor.switch("Resize")
-				return
+			
+			if cursor.Table.resize then
+				if #hoveredElements[2] > 0 or cursor.Table.resize.Active then
+					cursor.switch("Resize")
+					return
+				end
 			end
-
 			cursor.switch("Static")
 		end
 
@@ -308,18 +333,20 @@ Tools.minimize = function( ... )
 		Key = tbl.Key or "RightShift"
 	}
 
-	if not mini.Object[1] or not mini.Object[1]:IsA("CanvasGroup") then return mini end
+	if not mini.Object or not mini.Object[1] or not mini.Object[1]:IsA("CanvasGroup") then return warn("minimize: Missing Arguments") end
 
 	--[[ Functions ]] do
-		mini.MouseEnter = function()
-			if mini.Active then return end
-			mini.Object[2].Text = "○"
-		end
+		if mini.Object[2] then
+			mini.MouseEnter = function()
+				if mini.Active then return end
+				mini.Object[2].Text = "○"
+			end
 
-		mini.MouseLeave = function()
-			mini.Object[2].Text = "●"
+			mini.MouseLeave = function()
+				mini.Object[2].Text = "●"
+			end
 		end
-
+		
 		mini.Anim = function(bool)
 			mini.Active = true
 			Tween:Create(mini.Object[1], Tools.TweenInfo, {GroupTransparency = bool and 0 or 1}):Play()
@@ -331,8 +358,10 @@ Tools.minimize = function( ... )
 			task.wait(.2)
 
 			mini.Object[1].Visible = bool
-			mini.MouseLeave()
-
+			if mini.Object[2] then
+				mini.MouseLeave()
+			end
+				
 			mini.Active = false
 		end
 
@@ -353,10 +382,12 @@ Tools.minimize = function( ... )
 		mini.Connections = {}
 
 		table.insert(mini.Connections, UserInput.InputBegan:Connect(mini.KeyOpen))
-		table.insert(mini.Connections, mini.Object[2].MouseButton1Click:Connect(mini.Open))
-		table.insert(mini.Connections, mini.Object[2].MouseEnter:Connect(mini.MouseEnter))
-		table.insert(mini.Connections, mini.Object[2].MouseLeave:Connect(mini.MouseLeave))
-
+		if mini.Object[2] then
+			table.insert(mini.Connections, mini.Object[2].MouseButton1Click:Connect(mini.Open))
+			table.insert(mini.Connections, mini.Object[2].MouseEnter:Connect(mini.MouseEnter))
+			table.insert(mini.Connections, mini.Object[2].MouseLeave:Connect(mini.MouseLeave))
+		end
+		
 		table.insert(Tools.Connections, mini.Connections)
 	end
 
@@ -374,8 +405,8 @@ Tools.drag = function( ... )
 		Object = tbl.Object,
 		BoxMode = tbl.BoxMode or false
 	}
-
-	if not drag.Object[1] or not drag.Object[2] then return drag end
+	
+	if not drag.Object or not drag.Object[1] or not drag.Object[2] then return warn("drag: Missing Arguments") end
 
 	--[[ Functions ]] do
 		drag.Clear = function()
@@ -446,7 +477,7 @@ Tools.resize = function( ... )
 		BoxMode = tbl.BoxMode or false
 	}
 
-	if not resize.Object[1] or not resize.Object[2] then return resize end
+	if not resize.Object or not resize.Object[1] or not resize.Object[2] then return warn("resize: Missing Arguments") end
 
 	--[[ Functions ]] do
 		resize.Clear = function()
