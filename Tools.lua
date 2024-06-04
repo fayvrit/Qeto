@@ -13,7 +13,30 @@ local Tools = {
 	Connections = { }
 }
 
-Tools.FormatNumber = function(num)
+Tools.ReplaceTable = function(target, tbl)
+	if not tbl then 
+		tbl = {}
+	end
+	
+	for index, value in target do
+		tbl[index] = value
+	end
+	target = nil
+
+	return tbl
+end
+
+Tools.ColorSequence = function( tbl )
+	local Keypoints = {}
+	
+	for _, keypoint in tbl do
+		table.insert(Keypoints, ColorSequenceKeypoint.new(keypoint[1], keypoint[2]))
+	end
+
+	return ColorSequence.new(Keypoints)
+end
+
+Tools.FormatNumber = function( num )
 	if type(tonumber(num)) ~= "number" then return num end
 	num = tostring(num):reverse()
 	return num:gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
@@ -50,30 +73,31 @@ Tools.notification = function( ... )
 	
 	if not logs.Parent then return warn("notification: Missing Arguments") end
 	
+	local obj = {
+		Logs = Instance.new("Frame"),
+		UIListLayout = Instance.new("UIListLayout"),
+	}
+	
 	--[[ Instances ]] do
-		logs.obj = {
-			Logs = Instance.new("Frame"),
-			UIListLayout = Instance.new("UIListLayout"),
-		}
+		obj.Logs.Name = "Logs"
+		obj.Logs.AnchorPoint = Vector2.new(0.5, 1)
+		obj.Logs.Size = UDim2.new(0, 494, 0, 500)
+		obj.Logs.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		obj.Logs.BackgroundTransparency = 1
+		obj.Logs.Position = UDim2.new(0.5, 0, 1, -100)
+		obj.Logs.BorderSizePixel = 0
+		obj.Logs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		obj.Logs.Parent = logs.Parent
 
-		logs.obj.Logs.Name = "Logs"
-		logs.obj.Logs.AnchorPoint = Vector2.new(0.5, 1)
-		logs.obj.Logs.Size = UDim2.new(0, 494, 0, 500)
-		logs.obj.Logs.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		logs.obj.Logs.BackgroundTransparency = 1
-		logs.obj.Logs.Position = UDim2.new(0.5, 0, 1, -100)
-		logs.obj.Logs.BorderSizePixel = 0
-		logs.obj.Logs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		logs.obj.Logs.Parent = logs.Parent
-
-		logs.obj.UIListLayout.Name = "UIListLayout"
-		logs.obj.UIListLayout.Padding = UDim.new(0, 5)
-		logs.obj.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		logs.obj.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-		logs.obj.UIListLayout.Parent = logs.obj.Logs
+		obj.UIListLayout.Name = "UIListLayout"
+		obj.UIListLayout.Padding = UDim.new(0, 5)
+		obj.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		obj.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+		obj.UIListLayout.Parent = obj.Logs
 	end
 	
 	--[[ Functions ]] do
+		Tools.ReplaceTable(obj, logs.obj)
 		
 		logs.Message = function( ... )
 			local tbl = ...
@@ -94,88 +118,90 @@ Tools.notification = function( ... )
 			
 			logs[noti.Message] = {}
 			
+			local objMsg = {
+				Border = Instance.new("Frame"),
+				UICorner = Instance.new("UICorner"),
+				Background = Instance.new("Frame"),
+				UICorner_2 = Instance.new("UICorner"),
+				UIStroke = Instance.new("UIStroke"),
+				Text = Instance.new("TextLabel"),
+				UIPadding = Instance.new("UIPadding"),
+			}
+			
 			--[[ Instances ]] do 
-				logs[noti.Message].obj = {
-					Border = Instance.new("Frame"),
-					UICorner = Instance.new("UICorner"),
-					Background = Instance.new("Frame"),
-					UICorner_2 = Instance.new("UICorner"),
-					UIStroke = Instance.new("UIStroke"),
-					Text = Instance.new("TextLabel"),
-					UIPadding = Instance.new("UIPadding"),
-				}
+				objMsg.Border.Name = "Border"
+				objMsg.Border.Size = UDim2.new(0, 0, 0, 25)
+				objMsg.Border.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				objMsg.Border.BackgroundTransparency = 1
+				objMsg.Border.BorderSizePixel = 0
+				objMsg.Border.BackgroundColor3 = Color3.fromRGB(25, 30, 30)
+				objMsg.Border.Parent = obj.Logs
+
+				objMsg.UICorner.Name = "UICorner"
+				objMsg.UICorner.Parent = objMsg.Border
+
+				objMsg.Background.Name = "Background"
+				objMsg.Background.Size = UDim2.new(1, -4, 1, -4)
+				objMsg.Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				objMsg.Background.BackgroundTransparency = 1
+				objMsg.Background.Position = UDim2.new(0, 2, 0, 2)
+				objMsg.Background.BorderSizePixel = 0
+				objMsg.Background.BackgroundColor3 = Color3.fromRGB(45, 50, 60)
+				objMsg.Background.Parent = objMsg.Border
+
+				objMsg.UICorner_2.Name = "UICorner"
+				objMsg.UICorner_2.CornerRadius = UDim.new(0, 6)
+				objMsg.UICorner_2.Parent = objMsg.Background
+
+				objMsg.UIStroke.Name = "UIStroke"
+				objMsg.UIStroke.Color = Color3.fromRGB(80, 90, 100)
+				objMsg.UIStroke.Transparency = 1
+				objMsg.UIStroke.Parent = objMsg.Background
+
+				objMsg.Text.Name = "Text"
+				objMsg.Text.AnchorPoint = Vector2.new(0.5, 0)
+				objMsg.Text.Size = UDim2.new(1, 0, 1, 0)
+				objMsg.Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				objMsg.Text.BackgroundTransparency = 1
+				objMsg.Text.Position = UDim2.new(0.5, 0, 0, 0)
+				objMsg.Text.BorderSizePixel = 0
+				objMsg.Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				objMsg.Text.TextColor3 = Color3.fromRGB(175, 185, 185)
+				objMsg.Text.RichText = true
+				objMsg.Text.Text = noti.Message
+				objMsg.Text.TextTransparency = 1
+				objMsg.Text.TextSize = 14
+				objMsg.Text.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+				objMsg.Text.MaxVisibleGraphemes = 0
+				objMsg.Text.Parent = objMsg.Background
 				
-				logs[noti.Message].obj.Border.Name = "Border"
-				logs[noti.Message].obj.Border.Size = UDim2.new(0, 0, 0, 25)
-				logs[noti.Message].obj.Border.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				logs[noti.Message].obj.Border.BackgroundTransparency = 1
-				logs[noti.Message].obj.Border.BorderSizePixel = 0
-				logs[noti.Message].obj.Border.BackgroundColor3 = Color3.fromRGB(25, 30, 30)
-				logs[noti.Message].obj.Border.Parent = logs.obj.Logs
-
-				logs[noti.Message].obj.UICorner.Name = "UICorner"
-				logs[noti.Message].obj.UICorner.Parent = logs[noti.Message].obj.Border
-
-				logs[noti.Message].obj.Background.Name = "Background"
-				logs[noti.Message].obj.Background.Size = UDim2.new(1, -4, 1, -4)
-				logs[noti.Message].obj.Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				logs[noti.Message].obj.Background.BackgroundTransparency = 1
-				logs[noti.Message].obj.Background.Position = UDim2.new(0, 2, 0, 2)
-				logs[noti.Message].obj.Background.BorderSizePixel = 0
-				logs[noti.Message].obj.Background.BackgroundColor3 = Color3.fromRGB(45, 50, 60)
-				logs[noti.Message].obj.Background.Parent = logs[noti.Message].obj.Border
-
-				logs[noti.Message].obj.UICorner_2.Name = "UICorner"
-				logs[noti.Message].obj.UICorner_2.CornerRadius = UDim.new(0, 6)
-				logs[noti.Message].obj.UICorner_2.Parent = logs[noti.Message].obj.Background
-
-				logs[noti.Message].obj.UIStroke.Name = "UIStroke"
-				logs[noti.Message].obj.UIStroke.Color = Color3.fromRGB(80, 90, 100)
-				logs[noti.Message].obj.UIStroke.Transparency = 1
-				logs[noti.Message].obj.UIStroke.Parent = logs[noti.Message].obj.Background
-
-				logs[noti.Message].obj.Text.Name = "Text"
-				logs[noti.Message].obj.Text.AnchorPoint = Vector2.new(0.5, 0)
-				logs[noti.Message].obj.Text.Size = UDim2.new(1, 0, 1, 0)
-				logs[noti.Message].obj.Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				logs[noti.Message].obj.Text.BackgroundTransparency = 1
-				logs[noti.Message].obj.Text.Position = UDim2.new(0.5, 0, 0, 0)
-				logs[noti.Message].obj.Text.BorderSizePixel = 0
-				logs[noti.Message].obj.Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				logs[noti.Message].obj.Text.TextColor3 = Color3.fromRGB(175, 185, 185)
-				logs[noti.Message].obj.Text.RichText = true
-				logs[noti.Message].obj.Text.Text = noti.Message
-				logs[noti.Message].obj.Text.TextTransparency = 1
-				logs[noti.Message].obj.Text.TextSize = 14
-				logs[noti.Message].obj.Text.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-				logs[noti.Message].obj.Text.MaxVisibleGraphemes = 0
-				logs[noti.Message].obj.Text.Parent = logs[noti.Message].obj.Background
-				
-				logs[noti.Message].obj.UIPadding.Name = "UIPadding"
-				logs[noti.Message].obj.UIPadding.PaddingTop = UDim.new(0, 10)
-				logs[noti.Message].obj.UIPadding.PaddingBottom = UDim.new(0, 10)
-				logs[noti.Message].obj.UIPadding.PaddingLeft = UDim.new(0, 10)
-				logs[noti.Message].obj.UIPadding.PaddingRight = UDim.new(0, 10)
-				logs[noti.Message].obj.UIPadding.Parent = logs[noti.Message].obj.Text
+				objMsg.UIPadding.Name = "UIPadding"
+				objMsg.UIPadding.PaddingTop = UDim.new(0, 10)
+				objMsg.UIPadding.PaddingBottom = UDim.new(0, 10)
+				objMsg.UIPadding.PaddingLeft = UDim.new(0, 10)
+				objMsg.UIPadding.PaddingRight = UDim.new(0, 10)
+				objMsg.UIPadding.Parent = objMsg.Text
 			end
 		
 			--[[ Functions ]] do
-				local bounds = logs[noti.Message].obj.Text.TextBounds
+				Tools.ReplaceTable(objMsg, logs[noti.Message])
+				
+				local bounds = objMsg.Text.TextBounds
 				local Tweens = {
 					Start = {
-						Tween:Create(logs[noti.Message].obj.Text, Tools.TweenInfo, {TextTransparency = 0, MaxVisibleGraphemes = #noti.Message}),
-						Tween:Create(logs[noti.Message].obj.Background, Tools.TweenInfo, {BackgroundTransparency = .3}),
-						Tween:Create(logs[noti.Message].obj.UIStroke, Tools.TweenInfo, {Transparency = .3}),
-						Tween:Create(logs[noti.Message].obj.Border, Tools.TweenInfo, {
+						Tween:Create(objMsg.Text, Tools.TweenInfo, {TextTransparency = 0, MaxVisibleGraphemes = #noti.Message}),
+						Tween:Create(objMsg.Background, Tools.TweenInfo, {BackgroundTransparency = .3}),
+						Tween:Create(objMsg.UIStroke, Tools.TweenInfo, {Transparency = .3}),
+						Tween:Create(objMsg.Border, Tools.TweenInfo, {
 							Size = UDim2.new(0, bounds.X + 20, 0, bounds.Y + 11), 
 							BackgroundTransparency = .3
 						})
 					},
 					End = {
-						Tween:Create(logs[noti.Message].obj.Text, Tools.TweenInfo, {TextTransparency = 1, MaxVisibleGraphemes = 0}),
-						Tween:Create(logs[noti.Message].obj.Background, Tools.TweenInfo, {BackgroundTransparency = 1}),
-						Tween:Create(logs[noti.Message].obj.UIStroke, Tools.TweenInfo, {Transparency = 1}),
-						Tween:Create(logs[noti.Message].obj.Border, Tools.TweenInfo, {
+						Tween:Create(objMsg.Text, Tools.TweenInfo, {TextTransparency = 1, MaxVisibleGraphemes = 0}),
+						Tween:Create(objMsg.Background, Tools.TweenInfo, {BackgroundTransparency = 1}),
+						Tween:Create(objMsg.UIStroke, Tools.TweenInfo, {Transparency = 1}),
+						Tween:Create(objMsg.Border, Tools.TweenInfo, {
 							Size = UDim2.new(0, 0, 0, bounds.Y + 11), 
 							BackgroundTransparency = 1
 						})
@@ -183,10 +209,10 @@ Tools.notification = function( ... )
 				}
 				
 				logs[noti.Message].BoundChanged = function(property)
-					if property ~= "TextBounds" or logs[noti.Message].obj.Text.TextBounds.X < bounds.X then return end
+					if property ~= "TextBounds" or objMsg.Text.TextBounds.X < bounds.X then return end
 					
-					bounds = logs[noti.Message].obj.Text.TextBounds
-					logs[noti.Message].obj.Border.Size = UDim2.new(0, bounds.X + 20, 0, bounds.Y + 11)
+					bounds = objMsg.Text.TextBounds
+					objMsg.Border.Size = UDim2.new(0, bounds.X + 20, 0, bounds.Y + 11)
 				end
 				
 				logs[noti.Message].AnimStart = function()
@@ -209,7 +235,7 @@ Tools.notification = function( ... )
 					task.wait(.2)
 
 					if not logs[noti.Message] then return end
-					logs[noti.Message].obj.Border:Destroy()
+					objMsg.Border:Destroy()
 					logs[noti.Message] = nil 
 				end
 				
@@ -228,7 +254,7 @@ Tools.notification = function( ... )
 				end
 				
 				coroutine.wrap(logs[noti.Message].start)()
-				logs[noti.Message].obj.Text.Changed:Connect(logs[noti.Message].BoundChanged)
+				objMsg.Text.Changed:Connect(logs[noti.Message].BoundChanged)
 			end
 			
 			return logs[noti.Message]
@@ -266,32 +292,34 @@ Tools.cursor = function( ... )
 	--[[ Functions ]] do
 		
 		cursor.spawn = function()
-			cursor.obj = {Cursor = Instance.new("ImageLabel")}
+			local Cursor = Instance.new("ImageLabel")
 
-			cursor.obj.Cursor.Name = "Cursor"
-			cursor.obj.Cursor.AnchorPoint = cursor.Assets["Static"][2]
-			cursor.obj.Cursor.Size = UDim2.new(0, 32, 0, 32)
-			cursor.obj.Cursor.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			cursor.obj.Cursor.BackgroundTransparency = 1
-			cursor.obj.Cursor.Position = UDim2.new(0, 0, 0, 0)
-			cursor.obj.Cursor.BorderSizePixel = 0
-			cursor.obj.Cursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			cursor.obj.Cursor.Image = cursor.Assets["Static"][1]
-			cursor.obj.Cursor.ZIndex = 9999
-			cursor.obj.Cursor.Parent = cursor.Parent
+			Cursor.Name = "Cursor"
+			Cursor.AnchorPoint = cursor.Assets["Static"][2]
+			Cursor.Size = UDim2.new(0, 32, 0, 32)
+			Cursor.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Cursor.BackgroundTransparency = 1
+			Cursor.Position = UDim2.new(0, 0, 0, 0)
+			Cursor.BorderSizePixel = 0
+			Cursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Cursor.Image = cursor.Assets["Static"][1]
+			Cursor.ZIndex = 9999
+			Cursor.Parent = cursor.Parent
+
+			cursor.pointer = Cursor
 		end
 
 		cursor.switch = function(style)
-			cursor.obj.Cursor.AnchorPoint = cursor.Assets[style][2]
-			cursor.obj.Cursor.Image = cursor.Assets[style][1]
+			cursor.pointer.AnchorPoint = cursor.Assets[style][2]
+			cursor.pointer.Image = cursor.Assets[style][1]
 		end
 
 		cursor.moved = function()
 			local mouselocation = UserInput:GetMouseLocation()
 
 			UserInput.MouseIconEnabled = not cursor.Table.minimize.Enabled
-			cursor.obj.Cursor.Visible = cursor.Table.minimize.Enabled
-			cursor.obj.Cursor.Position = UDim2.fromOffset(mouselocation.X, mouselocation.Y)
+			cursor.pointer.Visible = cursor.Table.minimize.Enabled
+			cursor.pointer.Position = UDim2.fromOffset(mouselocation.X, mouselocation.Y)
 
 			local hoveredMouse = Vector2.new(mouselocation.X, mouselocation.Y - Gui:GetGuiInset().Y)
 
