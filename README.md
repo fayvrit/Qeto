@@ -1,16 +1,18 @@
-# Qeto UI Library
+# Qeto
 
 ### Join the Community
 [Discord Server](https://discord.gg/SXfReazvNN)
 
 ### Table of Contents
 - [What is Qeto?](#what-is-qeto)
-- [Documentation](#documentation)
+- [UI Library Properties](#ui-library-properties)
+- [Tools Properties](#ui-library-properties)
 
 ## What is Qeto?
 Qeto is an User Interface Library for Roblox developers & scripters. It simplifies the creation of user interfaces with its easy-to-use components.
 
-## Documentation
+# UI Library
+## UI Library Properties
 
 - ### Window 
   | Property | Type |
