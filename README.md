@@ -12,7 +12,7 @@
 Qeto is an User Interface Library for Roblox developers & scripters. It simplifies the creation of user interfaces with its easy-to-use components.
 
 # UI Library
-## UI Library Properties
+## Properties
 
 - ### Window 
   | Property | Type |
@@ -31,3 +31,6 @@ Qeto is an User Interface Library for Roblox developers & scripters. It simplifi
 [udim2]: https://create.roblox.com/docs/reference/engine/datatypes/UDim2
 [string]: https://create.roblox.com/docs/reference/engine/libraries/string
 [boolean]: https://create.roblox.com/docs/luau/booleans
+
+# Tools
+## Properties
